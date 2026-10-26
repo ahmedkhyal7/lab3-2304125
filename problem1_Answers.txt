@@ -1,0 +1,52 @@
+Lab 3 - Problem 1 answers
+(run problem1_DDL.sql and problem1_DML.sql first; database: company)
+
+======================================================================
+Q1.1  Insert a DEPARTMENT row that references an EMPLOYEE row, then try
+      to delete the referenced EMPLOYEE row.
+======================================================================
+SQL:
+    USE company;
+    INSERT INTO department (Dnumber, Dname, mgr_ssn, mgr_start_date)
+    VALUES (4, 'Marketing', '444444444', '2024-01-01');
+
+    DELETE FROM employee WHERE ssn = '444444444';
+
+Output:
+0	75	23:14:58	INSERT INTO department (Dnumber, Dname, mgr_ssn, mgr_start_date)
+ VALUES (4, 'Marketing', '444444444', '2024-01-01')	Error Code: 1062. Duplicate entry '4' for key 'department.PRIMARY'	0.015 
+
+======================================================================
+Q1.2  Insert a PROJECT row that references a DEPARTMENT that does not
+      exist yet.
+======================================================================
+SQL:
+    INSERT INTO project (Pnumber, Pname, Plocation, Dno)
+    VALUES (40, 'Mobile App', 'Cairo', 99);
+
+Output:
+0	80	23:18:10	INSERT INTO project (Pnumber, Pname, Plocation, Dno)
+ VALUES (40, 'Mobile App', 'Cairo', 99)	Error Code: 1452. Cannot add or update a child row: a foreign key constraint fails (`company`.`project`, CONSTRAINT `fk_proj_dept` FOREIGN KEY (`Dno`) REFERENCES `department` (`Dnumber`))	0.016 sec
+
+======================================================================
+Q1.3  If mgr_ssn and Dno are both NOT NULL, how do we insert the first
+      row in EMPLOYEE or DEPARTMENT?
+======================================================================
+
+
+SQL:
+    DROP DATABASE IF EXISTS company_q13;
+    CREATE DATABASE company_q13;
+    USE company_q13;
+
+    CREATE TABLE emp  (ssn CHAR(9) NOT NULL, Dno INT NOT NULL, PRIMARY KEY (ssn));
+    CREATE TABLE dept (Dnumber INT NOT NULL, mgr_ssn CHAR(9) NOT NULL,
+                       PRIMARY KEY (Dnumber),
+                       FOREIGN KEY (mgr_ssn) REFERENCES emp(ssn));
+    ALTER TABLE emp ADD FOREIGN KEY (Dno) REFERENCES dept(Dnumber);
+
+    INSERT INTO emp  VALUES ('999999999', 1);
+    INSERT INTO dept VALUES (1, '999999999');
+
+Output (both fail):
+0	94	23:21:05	INSERT INTO emp VALUES ('999999999', 1)	Error Code: 1452. Cannot add or update a child row: a foreign key constraint fails (`company_q13`.`emp`, CONSTRAINT `emp_ibfk_1` FOREIGN KEY (`Dno`) REFERENCES `dept` (`Dnumber`))	0.000 sec
